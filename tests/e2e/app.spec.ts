@@ -1,4 +1,11 @@
-import { _electron as electron, expect, test, type ElectronApplication, type Page } from '@playwright/test';
+import {
+  _electron as electron,
+  expect,
+  test,
+  type ElectronApplication,
+  type Locator,
+  type Page,
+} from '@playwright/test';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -64,14 +71,24 @@ test('keeps a new expense visible at the top of a long list', async () => {
       note: `Older ${i}`,
     })),
   });
+  // Same size as a CI runner's screen, so the layout is identical on every machine.
+  await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setContentSize(1000, 700));
   // The user has scrolled the list a little before adding.
   await page.locator('.list').evaluate((el) => (el.scrollTop = 120));
   await page.getByLabel('Amount').fill('5');
   await page.getByLabel('Note').fill('Brand new');
   await page.getByRole('button', { name: /Add expense/ }).click();
+  // Visible inside the list's own scroll area. (On small screens the list itself can sit below the
+  // window's fold, so "in the window viewport" would depend on the machine's resolution.)
+  const shownInList = (locator: Locator) =>
+    locator.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      const l = el.closest('.list')!.getBoundingClientRect();
+      return r.top >= l.top - 1 && r.bottom <= l.bottom + 1;
+    });
   const row = page.getByTestId('transaction').filter({ hasText: 'Brand new' });
-  await expect(row).toBeInViewport();
-  await expect(page.locator('.group-title').filter({ hasText: 'Today' })).toBeInViewport();
+  await expect.poll(() => shownInList(row)).toBe(true);
+  await expect.poll(() => shownInList(page.locator('.group-title').filter({ hasText: 'Today' }))).toBe(true);
   await expect.poll(() => page.locator('.list').evaluate((el) => el.scrollTop)).toBe(0);
 });
 
