@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import type { Expense } from '@shared/types';
 import { CATEGORY_META } from '../lib/categories';
@@ -35,6 +35,25 @@ export function TransactionList({ items, currency, highlightId, onDelete }: Prop
   }, [items, query]);
 
   const searching = query.trim() !== '';
+  const listRef = useRef<HTMLDivElement>(null);
+
+  // Bring a just-added (or restored) expense into view. Rows are inserted above whatever the user was
+  // looking at, and the browser keeps the scroll position, so without this it can land off-screen.
+  useEffect(() => {
+    const list = listRef.current;
+    const row =
+      highlightId != null ? list?.querySelector<HTMLElement>(`[data-expense-id="${highlightId}"]`) : null;
+    if (!list || !row) return;
+    const header = row.previousElementSibling?.classList.contains('group-title')
+      ? row.previousElementSibling
+      : row;
+    const listTop = list.getBoundingClientRect().top;
+    const top = header.getBoundingClientRect().top - listTop + list.scrollTop - 16;
+    const bottom = row.getBoundingClientRect().bottom - listTop + list.scrollTop;
+    if (top < list.scrollTop) list.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    else if (bottom > list.scrollTop + list.clientHeight)
+      list.scrollTo({ top: bottom - list.clientHeight, behavior: 'smooth' });
+  }, [highlightId]);
 
   return (
     <Card className="tx" index={3}>
@@ -50,7 +69,7 @@ export function TransactionList({ items, currency, highlightId, onDelete }: Prop
         />
       </div>
 
-      <div className="list">
+      <div className="list" ref={listRef}>
         <AnimatePresence initial={true} mode="popLayout">
           {rows.map((row, i) =>
             row.kind === 'day' ? (
@@ -109,6 +128,7 @@ function TransactionRow({ expense, currency, delay, isNew, onDelete }: RowProps)
       animate={{ opacity: 1, x: 0, transition: { duration: 0.5, delay: isNew ? 0 : delay, ease: EASE } }}
       exit={{ opacity: 0, x: 30, transition: { duration: 0.25 } }}
       data-testid="transaction"
+      data-expense-id={expense.id}
     >
       <div className="bubble">{meta.emoji}</div>
       <div className="meta">

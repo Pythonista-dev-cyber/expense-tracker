@@ -50,6 +50,31 @@ test('adds, deletes and restores an expense', async () => {
   await expect.poll(() => readSaved().expenses).toHaveLength(1);
 });
 
+test('keeps a new expense visible at the top of a long list', async () => {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  const yesterday = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  await launch({
+    currency: '$',
+    expenses: Array.from({ length: 25 }, (_, i) => ({
+      id: i + 1,
+      amount: 10 + i,
+      category: 'Food',
+      date: yesterday,
+      note: `Older ${i}`,
+    })),
+  });
+  // The user has scrolled the list a little before adding.
+  await page.locator('.list').evaluate((el) => (el.scrollTop = 120));
+  await page.getByLabel('Amount').fill('5');
+  await page.getByLabel('Note').fill('Brand new');
+  await page.getByRole('button', { name: /Add expense/ }).click();
+  const row = page.getByTestId('transaction').filter({ hasText: 'Brand new' });
+  await expect(row).toBeInViewport();
+  await expect(page.locator('.group-title').filter({ hasText: 'Today' })).toBeInViewport();
+  await expect.poll(() => page.locator('.list').evaluate((el) => el.scrollTop)).toBe(0);
+});
+
 test('rejects an empty amount', async () => {
   await launch();
   await page.getByRole('button', { name: /Add expense/ }).click();

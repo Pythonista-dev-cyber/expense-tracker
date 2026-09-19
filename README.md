@@ -39,6 +39,18 @@ npm run dev
 | `npm run format`    | Prettier                                             |
 | `npm run icon`      | Regenerate the app icon                              |
 
+## Microsoft Store
+
+| Command                     | What it does                                               |
+| --------------------------- | ---------------------------------------------------------- |
+| `npm run dist:store`        | Build the Store package (`release/<version>/*-store.appx`) |
+| `npm run store:assets`      | Regenerate the Store tile icons in `build/appx/`           |
+| `npm run store:screenshots` | Capture Store screenshots with sample data into `store/`   |
+
+The package identity lives in `electron-builder.yml` under `appx`. Listing text, age-rating answers
+and screenshot captions are in [`store/listing.md`](store/listing.md). The privacy policy is
+[`PRIVACY.md`](PRIVACY.md).
+
 ## Project layout
 
 ```

@@ -2,6 +2,10 @@ appId: com.expensetracker.app
 productName: Expense Tracker
 copyright: Copyright © 2026 Expense Tracker
 
+# Newer Windows Kits (10.0.26100); the legacy toolset's makeappx.exe won't start on current Windows 11.
+toolsets:
+  winCodeSign: '1.1.0'
+
 directories:
   buildResources: build
   output: release/${version}
@@ -27,5 +31,21 @@ nsis:
   uninstallDisplayName: Expense Tracker
   installerIcon: build/icon.ico
   uninstallerIcon: build/icon.ico
+
+# Microsoft Store package (npm run dist:store). Identity values come from
+# Partner Center → Product management → Product identity. The Store signs the package.
+appx:
+  identityName: Pythonista.PythonistasExpenseTracker
+  publisher: CN=7CA26B7C-95AD-4DD6-9429-22B6E2B50598
+  publisherDisplayName: Pythonista
+  displayName: "Pythonista's Expense Tracker"
+  applicationId: PythonistasExpenseTracker
+  backgroundColor: '#07080d'
+  showNameOnTiles: false
+  languages: [en-US]
+  # Electron needs Windows 10 1809+; tested on Windows 11 24H2.
+  minVersion: 10.0.17763.0
+  maxVersionTested: 10.0.26100.0
+  artifactName: ${name}-${version}-store.${ext}
 
 npmRebuild: false

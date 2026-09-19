@@ -84,7 +84,8 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   void app.whenReady().then(() => {
-    app.setAppUserModelId('com.expensetracker.app');
+    // Store (MSIX) builds get their app ID from the package; overriding it breaks taskbar pinning.
+    if (!process.windowsStore) app.setAppUserModelId('com.expensetracker.app');
     createWindow();
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
