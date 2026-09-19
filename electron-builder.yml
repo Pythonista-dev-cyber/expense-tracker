@@ -1,0 +1,31 @@
+appId: com.expensetracker.app
+productName: Expense Tracker
+copyright: Copyright © 2026 Expense Tracker
+
+directories:
+  buildResources: build
+  output: release/${version}
+
+files:
+  - out/**/*
+  - package.json
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.ico
+  artifactName: ${productName} Setup ${version}.${ext}
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: Expense Tracker
+  uninstallDisplayName: Expense Tracker
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+
+npmRebuild: false
